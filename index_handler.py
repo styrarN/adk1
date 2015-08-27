@@ -7,7 +7,8 @@ import sys
 HASH_TABLE_SIZE = 8*1024
 def hash(word):
     return int(sha1(word).hexdigest(), 16)
-
+def iso(str):
+    return bytes(str, encoding='iso-8859-1')
 class IndexWriter():
 
     def __init__(self, filename):
@@ -103,9 +104,7 @@ class IndexReader():
         return self._read_int(addr), self._read_int(addr + 4)
 
     def find(self, word):
-        print(word) #testprint
-        word = word.lower()
-        print(word)
+        word = iso(word.lower())
         hash_addr = (hash(word) % HASH_TABLE_SIZE) * 4
         
         wl_root = self._read_int(hash_addr) 

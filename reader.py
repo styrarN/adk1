@@ -4,9 +4,6 @@ from datetime import datetime
 
 from index_handler import IndexReader
 
-def iso(str):
-    return bytes(str.lower(), encoding='iso-8859-1')
-
 
 def main():
     index_reader = IndexReader('index')    
@@ -18,7 +15,6 @@ def main():
             if sys.argv[2] == 'nostupid':
                 stupid = False
         
-        print(sys.argv[1]) #testprint
         korpus_search(index_reader, korpus_handler, sys.argv[1], stupid=stupid)
         return
 
@@ -52,8 +48,7 @@ def main():
 def korpus_search(index_reader, korpus_handler, word, stupid=True):
 
     start_time = datetime.now()
-    print(iso(word)) #testprint
-    offsets = index_reader.find(iso(word))
+    offsets = index_reader.find(word)
     end_time = datetime.now()
 
     if len(offsets) > 25 and stupid:
