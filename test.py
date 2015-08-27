@@ -1,3 +1,5 @@
+#! coding=utf-8
+
 import os
 import unittest
 
@@ -17,7 +19,7 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(self.ih.find(' '), [])
         self.assertEqual(self.ih.find(''), [])
         self.assertEqual(self.ih.find('telefonkontakt'), self.ih.find('teleFonkONTAkt'))
-        self.assertEqual(len(self.ih.find('telefonkontakt')), 8 )
+        self.assertEqual(len(self.ih.find('telefonkontakt')), 6)
         
         
     def test_program(self):
