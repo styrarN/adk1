@@ -7,7 +7,7 @@ from index_handler import IndexReader
 
 def main():
     index_reader = IndexReader('index')    
-    korpus_handler = KorpusHandler('../korpus')
+    korpus_handler = KorpusHandler('korpus')
     stupid=True
 
     if len(sys.argv) > 1:
