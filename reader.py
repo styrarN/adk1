@@ -2,24 +2,30 @@
 
 import os
 import sys
+import argparse
 from datetime import datetime
 
 from index_handler import IndexReader
 
 
 def main():
+
+    parser = argparse.ArgumentParser(description='Sök efter hur svenska ord används')
+    parser.add_argument('-s', '--stupid',
+                        action='store_true',
+                        help='Bekräfta innan utskrift av många träffar')
+    parser.add_argument('ORD',
+                        nargs='?',
+                        help='Ordet att söka efter')
+
+    args = parser.parse_args()
+
     index_reader = IndexReader('index')    
     korpus_handler = KorpusHandler('korpus')
-    stupid=True
-
-    if len(sys.argv) > 1:
-        if len(sys.argv) > 2:
-            if sys.argv[2] == 'nostupid':
-                stupid = False
         
-        korpus_search(index_reader, korpus_handler, sys.argv[1], stupid=stupid)
+    if args.ORD:
+        korpus_search(index_reader, korpus_handler, args.ORD, stupid=args.stupid)
         return
-
     
     welcome = '\nVälkommen till: \n\n' \
               '___________.__  .__       .__     __            _____    __  .__            \n' \
@@ -41,7 +47,7 @@ def main():
     sys.stdout.flush()
     for line in sys.stdin:
         word = line.rstrip('\n').lower()
-        milliseconds = korpus_search(index_reader, korpus_handler, word, stupid=False)
+        milliseconds = korpus_search(index_reader, korpus_handler, word, stupid=args.stupid)
         print('Sökningen tog {} millisekunder.'.format(milliseconds))
         print('> ', end='')
         sys.stdout.flush()
@@ -59,7 +65,8 @@ def korpus_search(index_reader, korpus_handler, word, stupid=True):
             sys.stdout.flush()
             reply = sys.stdin.readline().rstrip('\n').lower()
             if reply in ['n','nej','no']:
-                return
+                offsets = offsets[:25]
+                break
             elif reply in ['y', 'yes', 'j', 'ja', 'fuck you']:
                 break
             else:
