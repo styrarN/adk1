@@ -46,14 +46,12 @@ class IndexWriter():
 
     def _write_word_offsets(self, offsets):
         """ Creates now offset for a word and returns address """
-        prev_addr = 0
+        start_addr = self.index_file.tell()
+        self.index_file.write(struct.pack('i', len(offsets)))
         for offset in offsets:
-            curr_addr = self.index_file.tell()
-            b = struct.pack('ii', offset, prev_addr)
+            b = struct.pack('i', offset)
             self.index_file.write(b)
-            prev_addr = curr_addr
-            
-        return prev_addr
+        return start_addr
      
     def index(self, word, offsets):
 
@@ -89,19 +87,9 @@ class IndexReader():
 
     def _get_word_offsets(self, address):
         next = address
-        offsets = []
+        off_l = self._read_int(address)
+        return struct.unpack('i'*off_l, self.index_file.read(off_l*4))
 
-        while next:
-            offset, next = self._read_word_offset(next)
-            offsets.append(offset)
-
-        return offsets
-
-    def _read_word_offset(self, addr):
-        # Where is offset?
-
-        # What is offset?
-        return self._read_int(addr), self._read_int(addr + 4)
 
     def find(self, word):
         word = iso(word.lower())
