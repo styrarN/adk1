@@ -59,6 +59,12 @@ def korpus_search(index_reader, korpus_handler, word, stupid=True):
     offsets = index_reader.find(word)
     end_time = datetime.now()
 
+    if offsets:
+        print('Hittade {} förekomster i texten.'.format(len(offsets)))
+    else:
+        print('Inga träffar')
+        
+
     if len(offsets) > 25 and stupid:
         while True:
             print('Det finns mer än 25 förekomster, vill du skriva ut alla? (j/n)')
@@ -75,10 +81,6 @@ def korpus_search(index_reader, korpus_handler, word, stupid=True):
     if offsets:
         for offset in offsets:
             print(korpus_handler.read(offset, b=30, a=len(word)+30))
-
-        print('Hittade {} förekomster i texten.'.format(len(offsets)))
-    else:
-        print('Inga träffar')
 
     return (end_time - start_time).microseconds / 1000
 
