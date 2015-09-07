@@ -1,32 +1,24 @@
-import os
 import struct
-from collections import OrderedDict
-from hashlib import sha1
-import sys
+import pickle
 
-HASH_TABLE_SIZE = 8*1024
-def hash(word):
-    return int(sha1(word).hexdigest(), 16)
+
 def iso(str):
     return bytes(str, encoding='iso-8859-1')
+
+
 class IndexWriter():
 
     def __init__(self, filename):
-        
-        f = open(filename, 'wb+')
-        self.index_file = f
-        self.index_file.seek(HASH_TABLE_SIZE*4)
-        self.hash_table = OrderedDict()
-        for i in range(HASH_TABLE_SIZE):
-            self.hash_table[i] = 0
+
+        self.index_file = open(filename, 'wb+')
+        self.pseudo_hash = []
 
     def __del__(self):
-        self.index_file.seek(0)
-        for value in self.hash_table.values():
-            self.index_file.write(struct.pack('i', value))
         self.index_file.close()
+        with open('pseudo_hash', 'wb') as f:
+            pickle.dump(self.pseudo_hash, f)
 
-    def _write_word_link(self, word, offsets, next): 
+    def _write_word_link(self, word, offsets, next):
         """ Creates new word, returns its address """
         offset_root = self._write_word_offsets(offsets)
         wl_addr = self.index_file.tell()
@@ -35,7 +27,7 @@ class IndexWriter():
         self.index_file.write(wl_b)
 
         self.index_file.write(word)
-        
+
         offs_b = struct.pack('i', offset_root)
         self.index_file.write(offs_b)
 
@@ -52,51 +44,57 @@ class IndexWriter():
             b = struct.pack('i', offset)
             self.index_file.write(b)
         return start_addr
-     
+
     def index(self, word, offsets):
 
-        hash_addr = (hash(word) % HASH_TABLE_SIZE)
-        
-        wl_root_addr = self.hash_table[hash_addr]
-        self.hash_table[hash_addr] = self._write_word_link(word, offsets, wl_root_addr)
+        # Pseudo hash keeps track of where words are located
+        if not self.pseudo_hash or self.pseudo_hash[-1][0] != word[:3]:
+            self.pseudo_hash.append((word[:3], -1))
+
+        wl_root_addr = self.pseudo_hash[-1][1]
+
+        self.pseudo_hash[-1] = (self.pseudo_hash[-1][0],
+                                self._write_word_link(word,
+                                                      offsets,
+                                                      wl_root_addr))
 
 
 class IndexReader():
 
     def __init__(self, filename):
-        sys.setrecursionlimit(10000)
         self.index_file = open(filename, 'rb')
+        with open('pseudo_hash', 'rb') as f:
+            self.pseudo_hash = pickle.load(f)
 
     def __del__(self):
         self.index_file.close()
 
     def _find_word_link(self, word, addr):
-        if addr:
-            c_w, offset, next= self._read_word_link(addr)
+        while addr != -1:
+            c_w, offset, addr = self._read_word_link(addr)
             if word == c_w:
-                return c_w, offset, next
-            else:
-                return self._find_word_link(word, next)
+                return c_w, offset, addr
 
     def _read_word_link(self, address):
         wl = self._read_int(address)
         word = self.index_file.read(wl)
         offset = self._read_int(address + 4 + wl)
-        next =  self._read_int(address + 8 + wl)
+        next = self._read_int(address + 8 + wl)
         return word, offset, next
 
     def _get_word_offsets(self, address):
-        next = address
         off_l = self._read_int(address)
         return struct.unpack('i'*off_l, self.index_file.read(off_l*4))
 
-
     def find(self, word):
         word = iso(word.lower())
-        hash_addr = (hash(word) % HASH_TABLE_SIZE) * 4
-        
-        wl_root = self._read_int(hash_addr) 
-        if wl_root:
+        wl_root = -1
+        for prefix, wl_root_cand in self.pseudo_hash:
+            if word[:3] == prefix:
+                wl_root = wl_root_cand
+                break
+
+        if wl_root != -1:
             wl = self._find_word_link(word, wl_root)
             if wl:
                 word, offset, next = wl
