@@ -9,20 +9,17 @@ import pstats
 from index_handler import IndexWriter
 
 
-def iso(s):
-    return bytes(s, encoding='iso-8859-1')
 
-
-def index(filename):
+def index():
 
     stdin = io.TextIOWrapper(sys.stdin.buffer, encoding = 'iso-8859-1')
-    handler = IndexWriter(filename)
+    handler = IndexWriter()
 
     offsets = []
     current_word = ''
     for line in stdin:
         line = line.rstrip('\n').split(' ')
-        word = iso(line[0])
+        word = line[0]
         offset = int(line[1])
         if word != current_word:
             if current_word:
@@ -33,4 +30,4 @@ def index(filename):
         offsets.append(offset)
 
 if __name__ == '__main__':
-    index('index')
+    index()

@@ -8,7 +8,7 @@ from index_handler import IndexReader
 class BasicTests(unittest.TestCase):
     
     def setUp(self):
-        self.ih = IndexReader('index')
+        self.ih = IndexReader()
 
     def test_search(self):
         self.assertEqual(self.ih.find('hiphopApottamus'), [])

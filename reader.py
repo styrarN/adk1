@@ -20,7 +20,7 @@ def main():
 
     args = parser.parse_args()
 
-    index_reader = IndexReader('index')    
+    index_reader = IndexReader()    
     korpus_handler = KorpusHandler('korpus')
         
     if args.ORD:
