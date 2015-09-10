@@ -24,7 +24,8 @@ def main():
     korpus_handler = KorpusHandler('korpus')
         
     if args.ORD:
-        korpus_search(index_reader, korpus_handler, args.ORD, stupid=args.stupid)
+        word = args.ORD.lower()
+        korpus_search(index_reader, korpus_handler, word, stupid=args.stupid)
         return
     
     welcome = '\nVälkommen till: \n\n' \
@@ -64,7 +65,6 @@ def korpus_search(index_reader, korpus_handler, word, stupid=True):
     else:
         print('Inga träffar')
         
-
     if len(offsets) > 25 and stupid:
         while True:
             print('Det finns mer än 25 förekomster, vill du skriva ut alla? (j/n)')

@@ -66,18 +66,20 @@ class IndexReader():
     def __init__(self):
         self.index_file = open("index_file", 'rb')
         self.offset_file = open('offset_file', 'rb')
-        with open('pseudo_hash', 'rb') as f:
-            self.pseudo_hash = open('pseudo_hash', 'rb')
+        self.pseudo_hash = open('pseudo_hash', 'rb')
 
     def __del__(self):
         self.index_file.close()
         self.offset_file.close()
-#TODO: fix while loop, has no check for end of file etc.
+        self.pseudo_hash.close()
+
     def _find_word_link(self, word, addr):
         self.index_file.seek(addr)
         wl = struct.unpack('i', self.index_file.read(4))[0]
         while wl:
-            c_w =self.index_file.read(wl)
+            c_w = self.index_file.read(wl)
+            if not c_w:
+                return
             if c_w[:3] != word[:3]:
                 return
             offs = struct.unpack('i', self.index_file.read(4))[0]
@@ -101,14 +103,15 @@ class IndexReader():
 
     def find(self, word):
     
+        word = word.lower()
         self.pseudo_hash.seek(hash(word)*4)
         w_addr = struct.unpack('i', self.pseudo_hash.read(4))[0]
-        word = iso(word.lower())
+        if w_addr == -1:
+            return []
 
-        if w_addr:
-            offs = self._find_word_link(word, w_addr)
-#todo:
-        if True:
+        word = iso(word)
+        offs = self._find_word_link(word, w_addr)
+        if offs:
             return self._get_word_offsets(offs)
 
         return []
